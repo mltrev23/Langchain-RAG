@@ -1,15 +1,33 @@
+from langchain.agents import initialize_agent, AgentType
+from langchain.llms import HuggingFaceHub
 from langchain.prompts import PromptTemplate
-from langchain.llms import HuggingFace
-from langchain.chains import LLMChain
- 
+from langchain.chains import SequentialChain
+from langchain.agents import load_tools
+
+
+#from langchain.llms import HuggingFaceHub
+llm = HuggingFaceHub(repo_id="EleutherAI/gpt-j-6B", model_kwargs={"temperature":0.7, "max_length":512}, huggingfacehub_api_token="your_api_token_here")
+
 prompt = PromptTemplate(
-    input_variables=["city"],
-    template="Describe a perfect day in {city}?",
+    input_variables=["question"],
+    template="Answer the following question: {question}"
 )
- 
-llm = HuggingFace(
-          model_name="gpt-neo-2.7B", 
-          temperature=0.9) 
- 
-llmchain = LLMChain(llm=llm, prompt=prompt)
-llmchain.run("Paris")
+
+tools = load_tools(["serpapi", "llm-math"], llm = llm)
+agent = initialize_agent(tools, llm, agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION, verbose=True)
+
+result = agent.run("What is the capital of France?")
+print(result)
+
+chain = SequentialChain(
+    chains=[
+        ("question", prompt),
+        ("result", agent)
+    ],
+    input_variables=["question"],
+    output_variables=["result"],
+    verbose=True
+)
+
+result = chain({"question": "What is the capital of France and what is the population?"})
+print(result["result"])
