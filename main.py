@@ -1,5 +1,5 @@
 from langchain.agents import initialize_agent, AgentType
-from langchain.llms import HuggingFaceHub
+from langchain_community.llms import HuggingFaceHub
 from langchain.prompts import PromptTemplate
 from langchain.chains import SequentialChain
 from langchain.agents import load_tools
@@ -16,8 +16,10 @@ prompt = PromptTemplate(
 tools = load_tools(["serpapi", "llm-math"], llm = llm)
 agent = initialize_agent(tools, llm, agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION, verbose=True)
 
-result = agent.run("What is the capital of France?")
+result = agent.invoke("What is the capital of France?")
+print('----------------------------------')
 print(result)
+print('**********************************')
 
 chain = SequentialChain(
     chains=[
